@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNS Lookup Results</title>
+</head>
+<body>
+    <h1>DNS Lookup Results</h1>
+    <p>DNS Name: {{ dns_name }}</p>
+    <p>DNS Type: {{ dns_type }}</p>
+    <h2>Results:</h2>
+    <ul>
+        {% for result in results %}
+            <li>{{ result }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/dns-lookup">Go back</a>
+</body>
+</html>
