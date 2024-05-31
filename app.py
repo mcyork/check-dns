@@ -11,9 +11,12 @@ def dns_lookup():
     if request.method == 'POST':
         dns_name = request.form['dns_name']
         dns_type = request.form['dns_type']
+        dns_server_ip = '8.8.8.8'  # Replace this with your specific DNS server IP
         results = []
         try:
-            answers = dns.resolver.resolve(dns_name, dns_type)
+            resolver = dns.resolver.Resolver()
+            resolver.nameservers = [dns_server_ip]
+            answers = resolver.resolve(dns_name, dns_type)
             for rdata in answers:
                 results.append(str(rdata))
         except Exception as e:
