@@ -28,7 +28,8 @@ def dns_lookup():
                 results[dns_server_ip].append(f"No response from DNS server: {dns_server_ip}")
             except Exception as e:
                 results[dns_server_ip].append(str(e))
-
+        print("debug")
+        print(results)  # Debug print statement
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
     return render_template('dns_form.html')
 
