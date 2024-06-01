@@ -9,11 +9,15 @@
     <p>DNS Name: {{ dns_name }}</p>
     <p>DNS Type: {{ dns_type }}</p>
     <h2>Results:</h2>
-    <ul>
-        {% for result in results %}
-            <li>{{ result }}</li>
-        {% endfor %}
-    </ul>
+    {% for dns_server, result_list in results.items() %}
+        <h3>Results from DNS Server: {{ dns_server }}</h3>
+        <ul>
+            {% for result in result_list %}
+                <li>{{ result }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
     <a href="/dns-lookup">Go back</a>
 </body>
 </html>
+

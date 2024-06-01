@@ -1,12 +1,90 @@
 
-If you can run some code like this - only a sample here and not fully cooked - you can enable some potential self serve / all in one DNS lookup.
 
-The problem can be solved in many ways.  This one used Internal DNS to provide a resolution.
+# DNS Lookup Tool
 
-You can add a concurrent external DNS resolution later.  Gwtting both answers in one shot can confuse people however when they bring this page's reslts to you, it let's you trust the results instead of doing this homework twice or guessing thier spelling mistake :)
+This project provides a simple web-based DNS lookup tool that allows users to compare DNS query results from multiple DNS servers. It is designed to help users understand how split-brain DNS and modern enterprise network configurations, including VPNs and DNS proxies, might impact their DNS queries.
 
-NSLOOKP and DIG can do these commands.. why the page?  Aren't you lucky to have sucn a open firewall policy :)  This is not for you.
+## Overview
 
-You could add a lot more to this simple example.  One thought is to also pull from the API of your internal DNS and external DNS.  Doing that may help uncover cache issues or other answers like GEO located results the app can't deduce otherwise.
+The DNS Lookup Tool is a Flask-based web application that allows users to input a DNS name and DNS query type. The tool then queries multiple DNS servers and displays the results for each server. This can help users identify discrepancies and understand how different DNS configurations might affect their ability to resolve domain names.
 
-Enjoy the basic internal DNS checker.
+## Features
+
+- Web-based interface for DNS queries.
+- Queries multiple DNS servers and displays results for each.
+- Helps identify split-brain DNS issues.
+- Useful for environments with VPNs and DNS proxies that might alter DNS responses.
+
+## Prerequisites
+
+- Python 3.6 or higher
+- `Flask` library
+- `dnspython` library
+
+## Installation
+
+1. Clone the repository to your local machine:
+
+```bash
+git clone https://github.com/...
+cd dns-lookup-tool
+```
+
+2. Ensure you have the required Python libraries installed:
+
+```bash
+pip install flask dnspython
+```
+
+## Usage
+
+1. Run the Flask application:
+
+```bash
+python3 app.py
+```
+
+2. Open your web browser and navigate to:
+
+```
+http://127.0.0.1:5000/dns-lookup
+```
+
+3. Use the form to input the DNS name and query type, then submit the form to see the DNS results from multiple servers.
+
+## Configuration
+
+- The DNS servers to query are specified in the `dns_lookup` function in `app.py`. You can replace `8.8.8.8` and `1.1.1.1` with the IP addresses of your internal or external DNS servers.
+
+```python
+dns_servers = ['8.8.8.8', '1.1.1.1']  # Replace with your specific DNS server IPs
+```
+
+## Example
+
+When a user inputs `mcyork.com` and query type `A`, the application will query the specified DNS servers (e.g., `8.8.8.8` and `1.1.1.1`). The results will be displayed, showing the responses from each DNS server:
+
+```
+DNS Name: mcyork.com
+DNS Type: A
+
+Results from DNS Server: 8.8.8.8
+- 173.236.141.229
+
+Results from DNS Server: 1.1.1.1
+- 173.236.141.229
+```
+
+## Purpose
+
+This tool is particularly useful for diagnosing DNS issues in complex network environments, such as:
+
+- **Split-brain DNS**: Where internal and external DNS servers provide different responses for the same domain name.
+- **VPN DNS Proxy**: Some VPN systems proxy all DNS queries and may return different results, including using CGN (Carrier-Grade NAT) IP addressing.
+- **Enterprise Networks**: As networks grow and security measures evolve, understanding the true DNS response can become more challenging.
+
+By providing a way to easily compare DNS responses from multiple servers, this tool helps network administrators and users diagnose and understand DNS resolution issues in their environment.
+
+## License
+
+This project is licensed under the MIT License.
