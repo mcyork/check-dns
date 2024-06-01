@@ -1,5 +1,4 @@
 
-
 # DNS Lookup Tool
 
 This project provides a simple web-based DNS lookup tool that allows users to compare DNS query results from multiple DNS servers. It is designed to help users understand how split-brain DNS and modern enterprise network configurations, including VPNs and DNS proxies, might impact their DNS queries.
@@ -14,12 +13,12 @@ The DNS Lookup Tool is a Flask-based web application that allows users to input 
 - Queries multiple DNS servers and displays results for each.
 - Helps identify split-brain DNS issues.
 - Useful for environments with VPNs and DNS proxies that might alter DNS responses.
+- API for programmatic access to DNS lookup functionality.
 
 ## Prerequisites
 
 - Python 3.6 or higher
-- `Flask` library
-- `dnspython` library
+- Required Python libraries (see `requirements.txt`)
 
 ## Installation
 
@@ -30,13 +29,15 @@ git clone https://github.com/...
 cd dns-lookup-tool
 ```
 
-2. Ensure you have the required Python libraries installed:
+2. Install the required Python libraries:
 
 ```bash
-pip install flask dnspython
+pip install -r requirements.txt
 ```
 
 ## Usage
+
+### Running the Web Application
 
 1. Run the Flask application:
 
@@ -52,7 +53,27 @@ http://127.0.0.1:5000/dns-lookup
 
 3. Use the form to input the DNS name and query type, then submit the form to see the DNS results from multiple servers.
 
-## Configuration
+### Using the API
+
+The API provides programmatic access to the DNS lookup functionality. The API is documented using Swagger and can be accessed at:
+
+```
+http://127.0.0.1:5000/api
+```
+
+#### Example API Request
+
+To perform a DNS lookup using the API, send a POST request to `/api/dns/lookup` with the following JSON payload:
+
+```json
+{
+  "dns_name": "example.com",
+  "dns_type": "A",
+  "dns_servers": ["8.8.8.8", "1.1.1.1"]
+}
+```
+
+### Configuration
 
 - The DNS servers to query are specified in the `dns_lookup` function in `app.py`. You can replace `8.8.8.8` and `1.1.1.1` with the IP addresses of your internal or external DNS servers.
 
