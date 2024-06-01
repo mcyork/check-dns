@@ -5,11 +5,10 @@
     <title>DNS Lookup</title>
 </head>
 <body>
-    <h1>DNS Lookup</h1>
-    <form action="/dns-lookup" method="post">
+    <h1>DNS Lookup Form</h1>
+    <form method="POST" action="/dns-lookup">
         <label for="dns_name">DNS Name:</label>
-        <input type="text" id="dns_name" name="dns_name" required>
-        <br>
+        <input type="text" id="dns_name" name="dns_name" required><br><br>
         <label for="dns_type">DNS Type:</label>
         <select id="dns_type" name="dns_type" required>
             <option value="A">A</option>
@@ -21,8 +20,7 @@
             <option value="SOA">SOA</option>
             <option value="SRV">SRV</option>
             <option value="TXT">TXT</option>
-        </select>
-        <br>
+        </select><br><br>
         <button type="submit">Lookup</button>
     </form>
 </body>
