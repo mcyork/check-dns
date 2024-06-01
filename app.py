@@ -4,11 +4,12 @@ import dns.resolver
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='DNS Lookup API',
-          description='A simple DNS Lookup API',
-          doc='/swagger-ui.html'  # Update the doc route to use the custom template
-          )
+          description='A simple DNS Lookup API. Visit /dns-lookup for the DNS lookup form.',
+          prefix='/api',
+          doc='/api'  # Serve Swagger UI at /api
+          ) 
 
-ns = api.namespace('api/v1', description='DNS operations')
+ns = api.namespace('dns', description='DNS operations')
 
 # Define the allowed DNS query types as an enumeration
 dns_query_types = [
@@ -24,7 +25,7 @@ dns_lookup_model = api.model('DNSLookup', {
     'dns_servers': fields.List(fields.String, description='List of DNS servers to query', default=['8.8.8.8', '1.1.1.1'])
 })
 
-@ns.route('/dns-lookup')
+@ns.route('/lookup')
 class DNSLookup(Resource):
     @ns.expect(dns_lookup_model)
     @ns.response(200, 'Success')
@@ -59,6 +60,9 @@ class DNSLookup(Resource):
         }
         return jsonify(response)
 
+# Add the namespace to the API
+api.add_namespace(ns, path='/dns')
+
 # Route to handle DNS lookup form and results
 @app.route('/dns-lookup', methods=['GET', 'POST'])
 def dns_lookup():
@@ -86,12 +90,12 @@ def dns_lookup():
         print("debug")
         print(results)  # Debug print statement
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
-    return render_template('dns_form.html')
+    return render_template('dns_form.html', dns_query_types=dns_query_types)
 
-# Static documentation route
-@app.route('/api/docs')
-def api_docs():
-    return render_template('api_docs.html')
+# Custom root route
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
