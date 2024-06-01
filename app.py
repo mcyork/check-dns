@@ -5,17 +5,22 @@ import dns.resolver
 app = Flask(__name__)
 api = Api(app, version='1.0', title='DNS Lookup API',
           description='A simple DNS Lookup API',
+          doc='/swagger-ui.html'  # Update the doc route to use the custom template
           )
 
 ns = api.namespace('api/v1', description='DNS operations')
 
 # Define the allowed DNS query types as an enumeration
-dns_query_types = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT']
+dns_query_types = [
+    'A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA',
+    'SRV', 'TXT', 'DS', 'DNSKEY', 'NSEC', 'NSEC3', 'RRSIG',
+    'TLSA', 'SMIMEA', 'SPF', 'SSHFP'
+]
 
 # Define the expected model for the API input
 dns_lookup_model = api.model('DNSLookup', {
     'dns_name': fields.String(required=True, description='The DNS name to lookup'),
-    'dns_type': fields.String(required=True, description='The DNS query type (A, AAAA, CNAME, etc.)', enum=dns_query_types),
+    'dns_type': fields.String(required=True, description='The DNS query type', enum=dns_query_types),
     'dns_servers': fields.List(fields.String, description='List of DNS servers to query', default=['8.8.8.8', '1.1.1.1'])
 })
 
