@@ -21,7 +21,7 @@ dns_query_types = [
 # Define the expected model for the API input
 dns_lookup_model = api.model('DNSLookup', {
     'dns_name': fields.String(required=True, description='The DNS name to lookup'),
-    'dns_type': fields.String(required=True, description='The DNS query type', enum=dns_query_types),
+    'dns_type': fields.String(required=False, description='The DNS query type', enum=dns_query_types),
     'dns_servers': fields.List(fields.String, description='List of DNS servers to query', default=['8.8.8.8', '1.1.1.1'])
 })
 
@@ -34,7 +34,7 @@ class DNSLookup(Resource):
         """Perform a DNS lookup"""
         data = api.payload
         dns_name = data['dns_name']
-        dns_type = data['dns_type']
+        dns_type = data.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
         dns_servers = data.get('dns_servers', ['8.8.8.8', '1.1.1.1'])
         results = {}
 
@@ -68,7 +68,7 @@ api.add_namespace(ns, path='/dns')
 def dns_lookup():
     if request.method == 'POST':
         dns_name = request.form['dns_name']
-        dns_type = request.form['dns_type']
+        dns_type = request.form.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
         dns_servers = ['8.8.8.8', '1.1.1.1']  # Replace with your specific DNS server IPs
         results = {}
 
