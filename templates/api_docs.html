@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNS Lookup API Documentation</title>
+</head>
+<body>
+    <h1>DNS Lookup API Documentation</h1>
+    <h2>Endpoint: /api/v1/dns-lookup</h2>
+    <h3>Method: POST</h3>
+    <h4>Request Body:</h4>
+    <pre>
+{
+    "dns_name": "example.com",
+    "dns_type": "A",
+    "dns_servers": ["8.8.8.8", "1.1.1.1"]
+}
+    </pre>
+    <h4>Response:</h4>
+    <pre>
+{
+    "dns_name": "example.com",
+    "dns_type": "A",
+    "results": {
+        "8.8.8.8": ["93.184.216.34"],
+        "1.1.1.1": ["93.184.216.34"]
+    }
+}
+    </pre>
+</body>
+</html>

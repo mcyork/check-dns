@@ -1,7 +1,58 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
+from flask_restx import Api, Resource, fields
 import dns.resolver
 
 app = Flask(__name__)
+api = Api(app, version='1.0', title='DNS Lookup API',
+          description='A simple DNS Lookup API',
+          )
+
+ns = api.namespace('api/v1', description='DNS operations')
+
+# Define the allowed DNS query types as an enumeration
+dns_query_types = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'PTR', 'SOA', 'SRV', 'TXT']
+
+# Define the expected model for the API input
+dns_lookup_model = api.model('DNSLookup', {
+    'dns_name': fields.String(required=True, description='The DNS name to lookup'),
+    'dns_type': fields.String(required=True, description='The DNS query type (A, AAAA, CNAME, etc.)', enum=dns_query_types),
+    'dns_servers': fields.List(fields.String, description='List of DNS servers to query', default=['8.8.8.8', '1.1.1.1'])
+})
+
+@ns.route('/dns-lookup')
+class DNSLookup(Resource):
+    @ns.expect(dns_lookup_model)
+    @ns.response(200, 'Success')
+    @ns.response(400, 'Validation Error')
+    def post(self):
+        """Perform a DNS lookup"""
+        data = api.payload
+        dns_name = data['dns_name']
+        dns_type = data['dns_type']
+        dns_servers = data.get('dns_servers', ['8.8.8.8', '1.1.1.1'])
+        results = {}
+
+        for dns_server_ip in dns_servers:
+            results[dns_server_ip] = []
+            try:
+                resolver = dns.resolver.Resolver()
+                resolver.nameservers = [dns_server_ip]
+                resolver.timeout = 2
+                resolver.lifetime = 2
+                answers = resolver.resolve(dns_name, dns_type)
+                for rdata in answers:
+                    results[dns_server_ip].append(str(rdata))
+            except dns.resolver.NoNameservers:
+                results[dns_server_ip].append(f"No response from DNS server: {dns_server_ip}")
+            except Exception as e:
+                results[dns_server_ip].append(str(e))
+
+        response = {
+            'dns_name': dns_name,
+            'dns_type': dns_type,
+            'results': results
+        }
+        return jsonify(response)
 
 # Route to handle DNS lookup form and results
 @app.route('/dns-lookup', methods=['GET', 'POST'])
@@ -32,6 +83,10 @@ def dns_lookup():
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
     return render_template('dns_form.html')
 
+# Static documentation route
+@app.route('/api/docs')
+def api_docs():
+    return render_template('api_docs.html')
+
 if __name__ == "__main__":
     app.run(debug=True)
-
