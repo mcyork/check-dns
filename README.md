@@ -81,6 +81,37 @@ To perform a DNS lookup using the API, send a POST request to `/api/dns/lookup` 
 dns_servers = ['8.8.8.8', '1.1.1.1']  # Replace with your specific DNS server IPs
 ```
 
+
+## Docker
+You can also run this application using Docker. Below are the instructions to build and run the Docker image.
+
+### Prerequisites
+Docker installed on your local machine
+Building the Docker Image
+
+### Clone the repository to your local machine:
+
+```bash
+git clone https://github.com/mcyork/check-dns.git
+cd check-dns
+```
+### Build the Docker image:
+
+```bash
+docker build -t dns-lookup-tool .
+```
+
+### Running the Docker Container
+#### Run the Docker container:
+
+```bash
+docker run -p 5000:5000 dns-lookup-tool
+```
+#### Open your web browser and navigate to:
+
+http://127.0.0.1:5000/dns-lookup
+This will start the Flask application in a Docker container and make it accessible on port 5000 of your host machine.
+
 ## Example
 
 When a user inputs `mcyork.com` and query type `A`, the application will query the specified DNS servers (e.g., `8.8.8.8` and `1.1.1.1`). The results will be displayed, showing the responses from each DNS server:
