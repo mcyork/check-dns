@@ -25,8 +25,8 @@ The DNS Lookup Tool is a Flask-based web application that allows users to input 
 1. Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/...
-cd dns-lookup-tool
+git clone https://github.com/mcyork/check-dns.git
+cd check-dns
 ```
 
 2. Install the required Python libraries:
