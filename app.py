@@ -32,5 +32,5 @@ def dns_lookup():
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
     return render_template('dns_form.html')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
