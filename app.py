@@ -1,3 +1,23 @@
+"""
+DNS Lookup Tool Application
+
+This application provides a web-based interface and an API for performing DNS lookups using multiple DNS servers.
+It is designed to help users identify and understand split-brain DNS and other DNS-related issues in complex network environments.
+
+Author: Ian McCutcheon
+Date: May 31, 2024
+
+Features:
+- Web-based DNS lookup form
+- API for programmatic DNS lookups
+- Queries multiple DNS servers and displays results
+
+Usage:
+- Run the Flask application and access the web interface at http://127.0.0.1:5000/dns-lookup
+- Use the API at http://127.0.0.1:5000/api
+
+License: MIT License
+"""
 from flask import Flask, request, render_template, jsonify
 from flask_restx import Api, Resource, fields
 import dns.resolver
