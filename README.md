@@ -140,3 +140,45 @@ By providing a way to easily compare DNS responses from multiple servers, this t
 ## License
 
 This project is licensed under the MIT License.
+
+### New Features
+
+#### Support for Multiple DNS Protocols
+- The tool now supports multiple DNS protocols including UDP, TCP, DoH (DNS over HTTPS), and DoT (DNS over TLS).
+- You can specify the protocol in the configuration file (`config.json`) for each DNS server.
+
+#### Enhanced API Capabilities
+- The API has been updated to handle DNS lookups using different protocols.
+- The API will automatically detect if the URL points to a local instance and perform the DNS lookup directly to avoid recursion.
+
+#### Example API Request
+To perform a DNS lookup using the API, send a POST request to `/api/dns/lookup` with the following JSON payload:
+
+```json
+{
+  "dns_name": "example.com",
+  "dns_type": "A",
+  "dns_servers": ["8.8.8.8", "1.1.1.1"],
+  "protocol": "UDP"
+}
+```
+
+#### Running the Web Application on Different IPs and Ports
+You can run the Flask application on different IP addresses and ports by modifying the `app.run` command in `app.py`:
+
+```python
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080, debug=True)
+```
+
+### Example `curl` Command
+To call the API and perform a DNS lookup, you can use the following `curl` command:
+
+```bash
+curl -X POST http://localhost:8080/api/dns/lookup     -H "Content-Type: application/json"     -d '{
+          "dns_name": "example.com",
+          "dns_type": "A",
+          "dns_servers": ["8.8.8.8", "1.1.1.1"],
+          "protocol": "UDP"
+        }'
+```
