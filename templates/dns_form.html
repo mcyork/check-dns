@@ -1,23 +1,14 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>DNS Lookup</title>
-</head>
-<body>
-    <h1>DNS Lookup Form</h1>
-    <form method="POST" action="/dns-lookup">
-        <label for="dns_name">DNS Name:</label>
-        <input type="text" id="dns_name" name="dns_name" required><br><br>
-        <label for="dns_type">DNS Type (optional):</label>
-        <select id="dns_type" name="dns_type">
-            <option value="A">Select a type (default is A)</option>
-            {% for dns_type in dns_query_types %}
-            <option value="{{ dns_type }}">{{ dns_type }}</option>
-            {% endfor %}
-        </select><br><br>
-        <button type="submit">Lookup</button>
-    </form>
-</body>
-</html>
+<!-- dns_form.html -->
+<form method="POST">
+    <label for="dns_name">DNS Name:</label>
+    <input type="text" id="dns_name" name="dns_name" required>
+    
+    <label for="dns_type">DNS Type:</label>
+    <select id="dns_type" name="dns_type">
+        {% for type in dns_query_types %}
+        <option value="{{ type }}">{{ type }}</option>
+        {% endfor %}
+    </select>
 
+    <button type="submit">Lookup</button>
+</form>

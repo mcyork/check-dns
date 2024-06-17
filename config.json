@@ -1,0 +1,19 @@
+{
+    "dns_servers": [
+        {
+            "server": "8.8.8.8",
+            "protocol": "UDP",
+            "url": "http://127.0.0.1:5000/api/dns/lookup"
+        },
+        {
+            "server": "1.1.1.1",
+            "protocol": "DoH",
+            "url": ""
+        },
+        {
+            "server": "9.9.9.9",
+            "protocol": "DoT",
+            "url": ""
+        }
+    ]
+}
