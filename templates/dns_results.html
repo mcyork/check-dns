@@ -9,11 +9,11 @@
     <p>DNS Name: {{ dns_name }}</p>
     <p>DNS Type: {{ dns_type }}</p>
     <h2>Results:</h2>
-    {% for dns_server, result_list in results.items() %}
-        <h3>Results from DNS Server: {{ dns_server }}</h3>
+    {% for result in results %}
+        <h3>Results from DNS Server: {{ result.friendly_name }} ({{ result.server }})</h3>
         <ul>
-            {% for result in result_list %}
-                <li>{{ result }}</li>
+            {% for answer in result.results %}
+                <li>{{ answer }}</li>
             {% endfor %}
         </ul>
     {% endfor %}

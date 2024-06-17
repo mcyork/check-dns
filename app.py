@@ -1,23 +1,3 @@
-"""
-DNS Lookup Tool Application
-
-This application provides a web-based interface and an API for performing DNS lookups using multiple DNS servers.
-It is designed to help users identify and understand split-brain DNS and other DNS-related issues in complex network environments.
-
-Author: Ian McCutcheon
-Date: May 31, 2024
-   
-Features:
-- Web-based DNS lookup form
-- API for programmatic DNS lookups
-- Queries multiple DNS servers and displays results
-
-Usage:
-- Run the Flask application and access the web interface at http://127.0.0.1:5000/dns-lookup
-- Use the API at http://127.0.0.1:5000/api
-
-License: MIT License
-"""
 from flask import Flask, request, render_template, jsonify
 from flask_restx import Api, Resource, fields
 import dns.resolver
@@ -116,13 +96,18 @@ class DNSLookup(Resource):
         data = api.payload
         dns_name = data['dns_name']
         dns_type = data.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
-        results = {}
+        results = []
 
         for server_config in config['dns_servers']:
             dns_server_ip = server_config['server']
+            friendly_name = server_config.get('name', dns_server_ip)
             protocol = server_config.get('protocol', 'UDP')
             url = server_config.get('url')
-            results[dns_server_ip] = []
+            server_results = {
+                "server": dns_server_ip,
+                "friendly_name": friendly_name,
+                "results": []
+            }
             try:
                 if url and is_local_url(url):
                     print(f"Performing local DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
@@ -156,11 +141,13 @@ class DNSLookup(Resource):
                             resolver.use_tcp = True
                         answers = resolver.resolve(dns_name, dns_type)
                         answers = [str(rdata) for rdata in answers]
-                results[dns_server_ip].extend(answers)
+                server_results["results"].extend(answers)
             except dns.resolver.NoNameservers:
-                results[dns_server_ip].append(f"No response from DNS server: {dns_server_ip}")
+                server_results["results"].append(f"No response from DNS server: {dns_server_ip}")
             except Exception as e:
-                results[dns_server_ip].append(str(e))
+                server_results["results"].append(str(e))
+
+            results.append(server_results)
 
         response = {
             'dns_name': dns_name,
@@ -175,13 +162,18 @@ def dns_lookup():
     if request.method == 'POST':
         dns_name = request.form['dns_name']
         dns_type = request.form.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
-        results = {}
+        results = []
 
         for server_config in config['dns_servers']:
             dns_server_ip = server_config['server']
+            friendly_name = server_config.get('name', dns_server_ip)
             protocol = server_config.get('protocol', 'UDP')
             url = server_config.get('url')
-            results[dns_server_ip] = []
+            server_results = {
+                "server": dns_server_ip,
+                "friendly_name": friendly_name,
+                "results": []
+            }
             try:
                 if url and is_local_url(url):
                     print(f"Performing local DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
@@ -215,12 +207,14 @@ def dns_lookup():
                             resolver.use_tcp = True
                         answers = resolver.resolve(dns_name, dns_type)
                         answers = [str(rdata) for rdata in answers]
-                results[dns_server_ip].extend(answers)
+                server_results["results"].extend(answers)
             except dns.resolver.NoNameservers:
-                results[dns_server_ip].append(f"No response from DNS server: {dns_server_ip}")
+                server_results["results"].append(f"No response from DNS server: {dns_server_ip}")
             except Exception as e:
-                results[dns_server_ip].append(str(e))
-        
+                server_results["results"].append(str(e))
+            
+            results.append(server_results)
+    
         print("debug")
         print(results)  # Debug print statement
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
