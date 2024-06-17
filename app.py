@@ -6,7 +6,7 @@ It is designed to help users identify and understand split-brain DNS and other D
 
 Author: Ian McCutcheon
 Date: May 31, 2024
-
+   
 Features:
 - Web-based DNS lookup form
 - API for programmatic DNS lookups
