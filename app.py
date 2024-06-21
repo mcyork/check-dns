@@ -39,21 +39,45 @@ dns_lookup_model = api.model('DNSLookup', {
 })
 
 def doh_lookup(dns_name, dns_type, dns_server):
+    print(f"Debug: Performing DoH lookup for {dns_name} using {dns_server}")
     doh_url = f'https://{dns_server}/dns-query'
     headers = {'accept': 'application/dns-json'}
     params = {'name': dns_name, 'type': dns_type}
     response = requests.get(doh_url, headers=headers, params=params, timeout=2)
     if response.status_code == 200:
         data = response.json()
-        answers = [item['data'] for item in data.get('Answer', [])]
+        print(f"Debug: DoH response data: {data}")
+        answers = []
+        for item in data.get('Answer', []):
+            record_type = dns.rdatatype.to_text(item['type'])
+            answers.append({
+                "record": item['data'],
+                "type": record_type,
+                "ttl": item['TTL'],
+                "authoritative": False,
+                "additional_records": []
+            })
         return answers
     else:
+        print(f"Debug: DoH request failed with status code {response.status_code}")
         raise Exception(f"DoH request failed with status code {response.status_code}")
 
 def dot_lookup(dns_name, dns_type, dns_server):
+    print(f"Debug: Performing DoT lookup for {dns_name} using {dns_server}")
     query = dns.message.make_query(dns_name, dns_type)
     response = dns.query.tls(query, dns_server, timeout=2)
-    answers = [str(rr) for rr in response.answer[0].items]
+    print(f"Debug: DoT response: {response}")
+    answers = []
+    for rrset in response.answer:
+        record_type = dns.rdatatype.to_text(rrset.rdtype)
+        for rdata in rrset:
+            answers.append({
+                "record": rdata.to_text(),
+                "type": record_type,
+                "ttl": rrset.ttl,
+                "authoritative": response.flags & dns.flags.AA != 0,
+                "additional_records": [additional.to_text() for additional in response.additional]
+            })
     return answers
 
 def api_lookup(dns_name, dns_type, dns_server, protocol, url):
@@ -112,36 +136,63 @@ class DNSLookup(Resource):
                 if url and is_local_url(url):
                     print(f"Performing local DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
                     if protocol == 'DoH':
-                        answers = doh_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = doh_lookup(dns_name, dns_type, dns_server_ip)
                     elif protocol == 'DoT':
-                        answers = dot_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = dot_lookup(dns_name, dns_type, dns_server_ip)
                     else:
                         resolver = dns.resolver.Resolver(configure=False)
                         resolver.nameservers = [dns_server_ip]
-                        resolver.timeout = 2
-                        resolver.lifetime = 2
+                        resolver.timeout = 3
+                        resolver.lifetime = 3
                         if protocol == 'TCP':
                             resolver.use_tcp = True
-                        answers = resolver.resolve(dns_name, dns_type)
-                        answers = [str(rdata) for rdata in answers]
+                        response = resolver.resolve(dns_name, dns_type)
+                        print(f"Debug: {response.response}")  # Debug print
+                        for rrset in response.response.answer:
+                            record_type = dns.rdatatype.to_text(rrset.rdtype)
+                            for rdata in rrset:
+                                server_results["results"].append({
+                                    "record": rdata.to_text(),
+                                    "type": record_type,
+                                    "ttl": rrset.ttl,
+                                    "authoritative": response.response.flags & dns.flags.AA != 0,
+                                    "additional_records": [additional.to_text() for additional in response.response.additional]
+                                })
                 elif url:
                     answers = api_lookup(dns_name, dns_type, dns_server_ip, protocol, url)
+                    for answer in answers:
+                        server_results["results"].append({
+                            "record": answer,
+                            "type": None,  # Type is not provided by API lookup
+                            "ttl": None,  # TTL is not provided by API lookup
+                            "authoritative": None,  # Authoritative status is not provided by API lookup
+                            "additional_records": []  # Additional records are not provided by API lookup
+                        })
                 else:
                     print(f"Performing direct DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
                     if protocol == 'DoH':
-                        answers = doh_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = doh_lookup(dns_name, dns_type, dns_server_ip)
                     elif protocol == 'DoT':
-                        answers = dot_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = dot_lookup(dns_name, dns_type, dns_server_ip)
                     else:
                         resolver = dns.resolver.Resolver(configure=False)
                         resolver.nameservers = [dns_server_ip]
-                        resolver.timeout = 2
-                        resolver.lifetime = 2
+                        resolver.timeout = 3
+                        resolver.lifetime = 3
                         if protocol == 'TCP':
                             resolver.use_tcp = True
-                        answers = resolver.resolve(dns_name, dns_type)
-                        answers = [str(rdata) for rdata in answers]
-                server_results["results"].extend(answers)
+                        response = resolver.resolve(dns_name, dns_type)
+                        print(f"Debug: {response.response}")  # Debug print
+                        for rrset in response.response.answer:
+                            record_type = dns.rdatatype.to_text(rrset.rdtype)
+                            for rdata in rrset:
+                                server_results["results"].append({
+                                    "record": rdata.to_text(),
+                                    "type": record_type,
+                                    "ttl": rrset.ttl,
+                                    "authoritative": response.response.flags & dns.flags.AA != 0,
+                                    "additional_records": [additional.to_text() for additional in response.response.additional]
+                                })
             except dns.resolver.NoNameservers:
                 server_results["results"].append(f"No response from DNS server: {dns_server_ip}")
             except Exception as e:
@@ -162,6 +213,7 @@ def dns_lookup():
     if request.method == 'POST':
         dns_name = request.form['dns_name']
         dns_type = request.form.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
+        advanced = 'advanced' in request.form
         results = []
 
         for server_config in config['dns_servers']:
@@ -178,36 +230,63 @@ def dns_lookup():
                 if url and is_local_url(url):
                     print(f"Performing local DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
                     if protocol == 'DoH':
-                        answers = doh_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = doh_lookup(dns_name, dns_type, dns_server_ip)
                     elif protocol == 'DoT':
-                        answers = dot_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = dot_lookup(dns_name, dns_type, dns_server_ip)
                     else:
                         resolver = dns.resolver.Resolver(configure=False)
                         resolver.nameservers = [dns_server_ip]  # Set the resolver to use only the specified DNS server
-                        resolver.timeout = 2  # Set a timeout value to avoid long delays on invalid DNS servers
-                        resolver.lifetime = 2  # Set a lifetime value to ensure the query doesn't take too long
+                        resolver.timeout = 3  # Set a timeout value to avoid long delays on invalid DNS servers
+                        resolver.lifetime = 3  # Set a lifetime value to ensure the query doesn't take too long
                         if protocol == 'TCP':
                             resolver.use_tcp = True
-                        answers = resolver.resolve(dns_name, dns_type)
-                        answers = [str(rdata) for rdata in answers]
+                        response = resolver.resolve(dns_name, dns_type)
+                        print(f"Debug: {response.response}")  # Debug print
+                        for rrset in response.response.answer:
+                            record_type = dns.rdatatype.to_text(rrset.rdtype)
+                            for rdata in rrset:
+                                server_results["results"].append({
+                                    "record": rdata.to_text(),
+                                    "type": record_type,
+                                    "ttl": rrset.ttl,
+                                    "authoritative": response.response.flags & dns.flags.AA != 0,
+                                    "additional_records": [additional.to_text() for additional in response.response.additional]
+                                })
                 elif url:
                     answers = api_lookup(dns_name, dns_type, dns_server_ip, protocol, url)
+                    for answer in answers:
+                        server_results["results"].append({
+                            "record": answer,
+                            "type": None,  # Type is not provided by API lookup
+                            "ttl": None,  # TTL is not provided by API lookup
+                            "authoritative": None,  # Authoritative status is not provided by API lookup
+                            "additional_records": []  # Additional records are not provided by API lookup
+                        })
                 else:
                     print(f"Performing direct DNS lookup for {dns_name} using {dns_server_ip} and protocol {protocol}")
                     if protocol == 'DoH':
-                        answers = doh_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = doh_lookup(dns_name, dns_type, dns_server_ip)
                     elif protocol == 'DoT':
-                        answers = dot_lookup(dns_name, dns_type, dns_server_ip)
+                        server_results["results"] = dot_lookup(dns_name, dns_type, dns_server_ip)
                     else:
                         resolver = dns.resolver.Resolver(configure=False)
                         resolver.nameservers = [dns_server_ip]  # Set the resolver to use only the specified DNS server
-                        resolver.timeout = 2  # Set a timeout value to avoid long delays on invalid DNS servers
-                        resolver.lifetime = 2  # Set a lifetime value to ensure the query doesn't take too long
+                        resolver.timeout = 3  # Set a timeout value to avoid long delays on invalid DNS servers
+                        resolver.lifetime = 3  # Set a lifetime value to ensure the query doesn't take too long
                         if protocol == 'TCP':
                             resolver.use_tcp = True
-                        answers = resolver.resolve(dns_name, dns_type)
-                        answers = [str(rdata) for rdata in answers]
-                server_results["results"].extend(answers)
+                        response = resolver.resolve(dns_name, dns_type)
+                        print(f"Debug: {response.response}")  # Debug print
+                        for rrset in response.response.answer:
+                            record_type = dns.rdatatype.to_text(rrset.rdtype)
+                            for rdata in rrset:
+                                server_results["results"].append({
+                                    "record": rdata.to_text(),
+                                    "type": record_type,
+                                    "ttl": rrset.ttl,
+                                    "authoritative": response.response.flags & dns.flags.AA != 0,
+                                    "additional_records": [additional.to_text() for additional in response.response.additional]
+                                })
             except dns.resolver.NoNameservers:
                 server_results["results"].append(f"No response from DNS server: {dns_server_ip}")
             except Exception as e:
@@ -217,7 +296,7 @@ def dns_lookup():
     
         print("debug")
         print(results)  # Debug print statement
-        return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results)
+        return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results, advanced=advanced)
     return render_template('dns_form.html', dns_query_types=dns_query_types)
 
 # Custom root route

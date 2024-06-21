@@ -9,14 +9,23 @@
     <p>DNS Name: {{ dns_name }}</p>
     <p>DNS Type: {{ dns_type }}</p>
     <h2>Results:</h2>
-    {% for result in results %}
-        <h3>Results from DNS Server: {{ result.friendly_name }} ({{ result.server }})</h3>
+    
+    {% for server_result in results %}
+        <h3>Results from DNS Server: {{ server_result.friendly_name }} ({{ server_result.server }})</h3>
         <ul>
-            {% for answer in result.results %}
-                <li>{{ answer }}</li>
+            {% for result in server_result.results %}
+                <li>
+                    {% if advanced %}
+                        {{ result.record }} {{ result.type }} ttl {{ result.ttl }} {% if result.authoritative %}authoritative{% else %}non authoritative{% endif %}
+                    {% else %}
+                        {{ result.record }}
+                    {% endif %}
+                </li>
             {% endfor %}
         </ul>
     {% endfor %}
+    
     <a href="/dns-lookup">Go back</a>
 </body>
 </html>
+
