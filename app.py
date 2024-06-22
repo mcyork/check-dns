@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 # logging.getLogger().addHandler(logging.NullHandler())
 
 # Suppress Flask's server startup messages
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+#log = logging.getLogger('werkzeug')
+#log.setLevel(logging.ERROR)
 
 # Suppress urllib3 debug messages
-logging.getLogger('urllib3').setLevel(logging.WARNING)
+#logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='DNS Lookup API',
@@ -253,5 +253,5 @@ def index():
     return render_template('index.html')
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
     # app.run(host='0.0.0.0', port=8080, debug=True)
