@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>DNS Lookup Form</title>
+    <script type="module" src="https://unpkg.com/wired-elements/lib/wired-toggle.js?module"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
             background-color: #f4f4f9;
             margin: 0;
             padding: 20px;
@@ -20,6 +21,7 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-style: dashed;
         }
         label {
             display: block;
@@ -40,7 +42,7 @@
         button {
             display: inline-block;
             padding: 10px 15px;
-            background: #007bff;
+            background: #ff007f;
             color: #fff;
             text-decoration: none;
             border: none;
@@ -48,7 +50,7 @@
             cursor: pointer;
         }
         button:hover {
-            background: #0056b3;
+            background: #ff0056;
         }
         .container {
             max-width: 800px;
@@ -57,15 +59,19 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-style: dashed;
+        }
+        .wide-input {
+            width: 40%;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>DNS Lookup Form</h1>
-        <form action="/dns-lookup" method="post">
+        <form id="dns-form" action="/dns-lookup" method="post">
             <label for="dns_name">DNS Name:</label>
-            <input type="text" id="dns_name" name="dns_name" required>
+            <input type="text" id="dns_name" name="dns_name"  style="width: 97%;" required>
             
             <label for="dns_type">DNS Type:</label>
             <select id="dns_type" name="dns_type">
@@ -73,6 +79,18 @@
                 <option value="{{ query_type }}">{{ query_type }}</option>
                 {% endfor %}
             </select>
+
+            <label>DNS Servers:</label>
+            {% for server in dns_servers %}
+            <div>
+                <label>
+                    <input type="checkbox" name="dns_servers" value="{{ server.server }}" checked> {{ server.name }} ({{ server.server }})
+                </label>
+            </div>
+            {% endfor %}
+            
+            <label for="custom_dns">Custom DNS Server:</label>
+            <input type="text" id="custom_dns" name="custom_dns" style="width: 97%;" placeholder="Enter custom DNS server IP">
             
             <label>
                 <input type="checkbox" name="advanced" checked> Advanced

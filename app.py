@@ -12,6 +12,16 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Uncomment the following line to disable all logging
+#logging.getLogger().addHandler(logging.NullHandler())
+
+# Suppress Flask's server startup messages
+#log = logging.getLogger('werkzeug')
+#log.setLevel(logging.ERROR)
+
+# Suppress urllib3 debug messages
+#logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 app = Flask(__name__)
 api = Api(app, version='1.0', title='DNS Lookup API',
           description='A simple DNS Lookup API. Visit /dns-lookup for the DNS lookup form.',
@@ -60,11 +70,11 @@ def doh_lookup(dns_name, dns_type, dns_server):
         for item in data.get('Answer', []):
             record_type = dns.rdatatype.to_text(item['type'])
             answers.append({
+                "query_name": item['name'],
                 "record": item['data'],
                 "type": record_type,
                 "ttl": item['TTL'],
-                "authoritative": False,
-                "additional_records": []
+                "authoritative": False
             })
         return answers
     else:
@@ -81,11 +91,11 @@ def dot_lookup(dns_name, dns_type, dns_server):
         record_type = dns.rdatatype.to_text(rrset.rdtype)
         for rdata in rrset:
             answers.append({
+                "query_name": rrset.name.to_text(),
                 "record": rdata.to_text(),
                 "type": record_type,
                 "ttl": rrset.ttl,
-                "authoritative": response.flags & dns.flags.AA != 0,
-                "additional_records": [additional.to_text() for additional in response.additional]
+                "authoritative": response.flags & dns.flags.AA != 0
             })
     return answers
 
@@ -104,11 +114,11 @@ def direct_dns_lookup(dns_name, dns_type, dns_server_ip, protocol):
         record_type = dns.rdatatype.to_text(rrset.rdtype)
         for rdata in rrset:
             answers.append({
+                "query_name": rrset.name.to_text(),
                 "record": rdata.to_text(),
                 "type": record_type,
                 "ttl": rrset.ttl,
-                "authoritative": response.response.flags & dns.flags.AA != 0,
-                "additional_records": [additional.to_text() for additional in response.response.additional]
+                "authoritative": response.response.flags & dns.flags.AA != 0
             })
     return answers
 
@@ -204,10 +214,30 @@ def dns_lookup():
         dns_name = request.form['dns_name']
         dns_type = request.form.get('dns_type', 'A') or 'A'  # Default to 'A' if not provided or empty
         advanced = 'advanced' in request.form
-        results = [perform_dns_lookup(dns_name, dns_type, server_config) for server_config in config['dns_servers']]
+        fun_style = 'fun_style' in request.form
+        selected_servers = request.form.getlist('dns_servers')
+        custom_dns = request.form.get('custom_dns')
+
+        # Add the custom DNS server to the selected servers if provided
+        if custom_dns:
+            selected_servers.append(custom_dns)
+
+        # Filter the DNS servers based on the selection
+        filtered_servers = [server for server in config['dns_servers'] if server['server'] in selected_servers]
+        # Add custom DNS server configuration if provided
+        if custom_dns:
+            filtered_servers.append({
+                "server": custom_dns,
+                "protocol": "UDP",  # Default protocol for custom DNS server
+                "url": "",
+                "name": "Custom DNS"
+            })
+        
+        results = [perform_dns_lookup(dns_name, dns_type, server_config) for server_config in filtered_servers]
     
-        return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results, advanced=advanced)
-    return render_template('dns_form.html', dns_query_types=dns_query_types)
+        return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results, advanced=advanced, custom_dns=custom_dns, fun_style=fun_style)
+    return render_template('dns_form.html', dns_query_types=dns_query_types, dns_servers=config['dns_servers'])
+
 
 # Custom root route
 @app.route('/')
@@ -215,5 +245,5 @@ def index():
     return render_template('index.html')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
     # app.run(host='0.0.0.0', port=8080, debug=True)
