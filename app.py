@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, render_template, jsonify
 from flask_restx import Api, Resource, fields
 import dns.resolver
@@ -6,21 +7,20 @@ import dns.message
 import requests
 import json
 import socket
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Uncomment the following line to disable all logging
-#logging.getLogger().addHandler(logging.NullHandler())
+# Uncomment the following line to disable all app logging
+# logging.getLogger().addHandler(logging.NullHandler())
 
 # Suppress Flask's server startup messages
-#log = logging.getLogger('werkzeug')
-#log.setLevel(logging.ERROR)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # Suppress urllib3 debug messages
-#logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='DNS Lookup API',
@@ -99,7 +99,6 @@ def dot_lookup(dns_name, dns_type, dns_server):
             })
     return answers
 
-
 def direct_dns_lookup(dns_name, dns_type, dns_server_ip, protocol):
     resolver = dns.resolver.Resolver(configure=False)
     resolver.nameservers = [dns_server_ip]
@@ -134,7 +133,17 @@ def api_lookup(dns_name, dns_type, dns_server, protocol, url):
 
     response = requests.post(url, json=payload, timeout=10)
     if response.status_code == 200:
-        return response.json().get('results', {}).get(dns_server, [])
+        data = response.json()
+        results = []
+        for answer in data.get('results', {}).get(dns_server, []):
+            results.append({
+                "query_name": answer.get('name'),
+                "record": answer.get('data'),
+                "type": dns.rdatatype.to_text(answer.get('type')),
+                "ttl": answer.get('TTL'),
+                "authoritative": False
+            })
+        return results
     else:
         raise Exception(f"API request failed with status code {response.status_code}")
 
@@ -237,7 +246,6 @@ def dns_lookup():
     
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results, advanced=advanced, custom_dns=custom_dns, fun_style=fun_style)
     return render_template('dns_form.html', dns_query_types=dns_query_types, dns_servers=config['dns_servers'])
-
 
 # Custom root route
 @app.route('/')
