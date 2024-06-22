@@ -1,4 +1,3 @@
-Here's the updated README with explanations for the advanced checkbox and the additional DNS server option:
 
 ---
 
