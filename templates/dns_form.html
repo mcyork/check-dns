@@ -1,16 +1,85 @@
-<form method="POST">
-    <label for="dns_name">DNS Name:</label>
-    <input type="text" id="dns_name" name="dns_name" required>
-    
-    <label for="dns_type">DNS Type:</label>
-    <select id="dns_type" name="dns_type">
-        {% for type in dns_query_types %}
-        <option value="{{ type }}">{{ type }}</option>
-        {% endfor %}
-    </select>
-
-    <label for="advanced">Advanced:</label>
-    <input type="checkbox" id="advanced" name="advanced" checked>
-
-    <button type="submit">Lookup</button>
-</form>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNS Lookup Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DNS Lookup Form</h1>
+        <form action="/dns-lookup" method="post">
+            <label for="dns_name">DNS Name:</label>
+            <input type="text" id="dns_name" name="dns_name" required>
+            
+            <label for="dns_type">DNS Type:</label>
+            <select id="dns_type" name="dns_type">
+                {% for query_type in dns_query_types %}
+                <option value="{{ query_type }}">{{ query_type }}</option>
+                {% endfor %}
+            </select>
+            
+            <label>
+                <input type="checkbox" name="advanced" checked> Advanced
+            </label>
+            
+            <button type="submit">Lookup</button>
+        </form>
+    </div>
+</body>
+</html>

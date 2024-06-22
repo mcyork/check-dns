@@ -3,29 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <title>DNS Lookup Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        h1 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        p {
+            font-size: 16px;
+            color: #555;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        a {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 10px 15px;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background: #0056b3;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-    <h1>DNS Lookup Results</h1>
-    <p>DNS Name: {{ dns_name }}</p>
-    <p>DNS Type: {{ dns_type }}</p>
-    <h2>Results:</h2>
-    
-    {% for server_result in results %}
-        <h3>Results from DNS Server: {{ server_result.friendly_name }} ({{ server_result.server }})</h3>
-        <ul>
-            {% for result in server_result.results %}
-                <li>
-                    {% if advanced %}
-                        {{ result.record }} {{ result.type }} ttl {{ result.ttl }} {% if result.authoritative %}authoritative{% else %}non authoritative{% endif %}
-                    {% else %}
-                        {{ result.record }}
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-    
-    <a href="/dns-lookup">Go back</a>
+    <div class="container">
+        <h1>DNS Lookup Results</h1>
+        <p>DNS Name: {{ dns_name }}</p>
+        <p>DNS Type: {{ dns_type }}</p>
+        <h2>Results:</h2>
+        
+        {% for server_result in results %}
+            <h3>Results from DNS Server: {{ server_result.friendly_name }} ({{ server_result.server }})</h3>
+            <ul>
+                {% for result in server_result.results %}
+                    <li>
+                        {% if advanced %}
+                            {{ result.record }} {{ result.type }} ttl {{ result.ttl }} {% if result.authoritative %}authoritative{% else %}non authoritative{% endif %}
+                        {% else %}
+                            {{ result.record }}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+        
+        <a href="/dns-lookup">Go back</a>
+        <a href="#" onclick="document.getElementById('refreshForm').submit();">Refresh</a>
+        
+        <!-- Hidden form to re-submit the query -->
+        <form id="refreshForm" method="post" action="/dns-lookup" style="display:none;">
+            <input type="hidden" name="dns_name" value="{{ dns_name }}">
+            <input type="hidden" name="dns_type" value="{{ dns_type }}">
+            {% if advanced %}
+            <input type="hidden" name="advanced" checked>
+            {% endif %}
+        </form>
+    </div>
 </body>
 </html>
-
