@@ -245,6 +245,11 @@ def dns_lookup():
         results = [perform_dns_lookup(dns_name, dns_type, server_config) for server_config in filtered_servers]
     
         return render_template('dns_results.html', dns_name=dns_name, dns_type=dns_type, results=results, advanced=advanced, custom_dns=custom_dns, fun_style=fun_style)
+    
+    # Load the dns_form with the server checked state from the config
+    for server in config['dns_servers']:
+        server['checked'] = server.get('checked', False)
+
     return render_template('dns_form.html', dns_query_types=dns_query_types, dns_servers=config['dns_servers'])
 
 # Custom root route

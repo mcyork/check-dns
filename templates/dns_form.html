@@ -84,7 +84,7 @@
             {% for server in dns_servers %}
             <div>
                 <label>
-                    <input type="checkbox" name="dns_servers" value="{{ server.server }}" checked> {{ server.name }} ({{ server.server }})
+                    <input type="checkbox" name="dns_servers" value="{{ server.server }}" {% if server.checked %}checked{% endif %}> {{ server.name }} ({{ server.server }})
                 </label>
             </div>
             {% endfor %}

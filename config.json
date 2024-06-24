@@ -4,19 +4,23 @@
             "server": "8.8.8.8",
             "protocol": "UDP",
             "url": "http://127.0.0.1:5000/api/dns/lookup",
-            "name": "Google"
+            "name": "Google",
+            "checked": true
         },
         {
             "server": "1.1.1.1",
             "protocol": "DoH",
             "url": "",
-            "name": "Cloudflare"
+            "name": "Cloudflare",
+            "checked": false
         },
         {
             "server": "9.9.9.9",
             "protocol": "DoT",
             "url": "",
-            "name": "Quad9"
+            "name": "Quad9",
+            "checked": true
         }
     ]
 }
+
